@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | Innoworq</title>
+    <style>
+        :root { --primary: #1e293b; --bg: #f8fafc; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        
+        /* Navbar Styles */
+        .navbar { background: white; padding: 1rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .container { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; width: 100%; }
+        .nav-brand { font-weight: bold; text-decoration: none; color: var(--primary); font-size: 1.4rem; }
+        .btn-status { text-decoration: none; color: var(--primary); font-size: 0.9rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 6px; background: #f1f5f9; }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; justify-content: center; align-items: center; }
+        .login-card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 1.5rem; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; }
+        input { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; }
+        .btn-login { background: var(--primary); color: white; border: none; width: 100%; padding: 0.75rem; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 1rem; transition: 0.2s; }
+        .btn-login:hover { opacity: 0.9; }
+        
+        /* Link Styling */
+        .forgot-link:hover { text-decoration: underline !important; opacity: 0.8; }
+        
+        #message { color: #ef4444; font-size: 0.85rem; margin-top: 1rem; text-align: center; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">INNOWORQ</a>
+            <div class="nav-btns">
+                <a href="index.html" class="btn btn-status">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="login-card">
+            <h2>Admin Access</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="admin@innoworq.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" id="submitBtn" class="btn-login">Sign In</button>
+                
+                <div style="text-align: center; margin-top: 1rem;">
+                    <a href="#" onclick="handleForgotPassword()" class="forgot-link" style="color: var(--primary); font-size: 0.85rem; text-decoration: none;">Forgot Password?</a>
+                </div>
+
+                <div id="message"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUB_URL = "https://nrfqgtacpscpuzvtwcrd.supabase.co";
+        const SUB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yZnFndGFjcHNjcHV6dnR3Y3JkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzODI1NDAsImV4cCI6MjA4Nzk1ODU0MH0.rUPs0JHEF_fpGONenHlyXNu8_mgCjip9_fV0MYRaKnM";
+        
+        const sbClient = supabase.createClient(SUB_URL, SUB_KEY);
+
+        // --- Login Logic ---
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const msgDiv = document.getElementById('message');
+            const btn = document.getElementById('submitBtn');
+
+            msgDiv.innerText = "";
+            btn.innerText = "Authenticating...";
+            btn.disabled = true;
+
+            try {
+                const { data, error } = await sbClient.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) {
+                    msgDiv.style.color = "#ef4444";
+                    msgDiv.innerText = "Error: " + error.message;
+                } else {
+                    msgDiv.style.color = "green";
+                    msgDiv.innerText = "Success! Redirecting...";
+                    window.location.href = "admin-dashboard.html";
+                }
+            } catch (err) {
+                msgDiv.innerText = "An unexpected error occurred.";
+            } finally {
+                btn.innerText = "Sign In";
+                btn.disabled = false;
+            }
+        });
+
+        // --- Forgot Password Logic ---
+        async function handleForgotPassword() {
+            const email = prompt("Please enter your admin email address:");
+            if (!email) return;
+
+            const { error } = await sbClient.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + '/reset-password.html',
+            });
+
+            if (error) {
+                alert("Error: " + error.message);
+            } else {
+                alert("Password reset link has been sent to your email!");
+            }
+        }
+    </script>
+</body>
+</html>
