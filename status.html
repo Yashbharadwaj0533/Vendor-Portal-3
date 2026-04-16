@@ -107,7 +107,7 @@
             const { data, error } = await sbClient
                 .from('vendors')
                 .select('company_name, status, created_at')
-                .or(`pan_number.eq.${regNumber},gstin.eq.${regNumber}`)
+                .or(`pan.eq.${regNumber},gstin.eq.${regNumber}`)
                 .maybeSingle();
 
             if (error) throw error;
