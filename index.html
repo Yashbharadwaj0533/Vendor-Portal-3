@@ -452,35 +452,29 @@ form.addEventListener('submit', async (e) => {
             }
         }
 
-        const payload = {
-            CREATE TABLE vendors (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    company_name TEXT,
-    constitution_type TEXT,
-    doi DATE,
-    pan TEXT,
-    gstin TEXT,
-    msme_number TEXT,
-    auth_person TEXT,
-    mobile TEXT,
-    email TEXT,
-    bank_name TEXT,
-    account_num TEXT,
-    ifsc TEXT,
-    turnover_last NUMERIC,
-    turnover_prev NUMERIC,
-    profit_last NUMERIC,
-    profit_prev NUMERIC,
-    litigation TEXT,
-    blacklisted TEXT,
-    category TEXT,
-    vendor_type TEXT,
-    files JSONB, -- Stores the array of file objects
-    google_drive_url TEXT,
-    status TEXT DEFAULT 'pending'
-);
-        };
+  const payload = {
+    companyName: form.companyName.value,
+    constitutionType: form.constitutionType.value,
+    doi: form.doi.value,
+    pan: form.pan.value,
+    gstin: form.gstin.value,
+    msmeNumber: form.msmeNumber.value,
+    authPerson: form.authPerson.value,
+    mobile: form.mobile.value,
+    email: form.email.value,
+    bankName: form.bankName.value,
+    accountNum: form.accountNum.value,
+    ifsc: form.ifsc.value,
+    turnoverLast: form.turnoverLast.value,
+    turnoverPrev: form.turnoverPrev.value,
+    profitLast: form.profitLast.value,
+    profitPrev: form.profitPrev.value,
+    litigation: form.ongoingLitigation.value, 
+    blacklisted: form.isBlacklisted.value,
+    category: document.getElementById('category').value,
+    vendorType: selectedType, 
+    files: uploadedFiles
+};
 
         await fetch(WEB_APP_URL, {
             method: 'POST',
