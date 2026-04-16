@@ -384,7 +384,7 @@
 
 <script>
 const form = document.getElementById('vendorForm');
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzxlz6E6SClytboHbT9m123sNEmSirXvy4_KWSI0ZQZk4uc7wc6t-psxg5b4xHcEJa2/exec"
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby1oy86UKcCzYk0GWxGweNGsqYnXd32wXV-fyquicintvCxzp9O2BxAejSJJOmLdRFf/exec"
 // Helper: Validation Functions
 function validatePAN(pan) {
     const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
@@ -453,27 +453,33 @@ form.addEventListener('submit', async (e) => {
         }
 
         const payload = {
-            companyName: form.companyName.value,
-            constitutionType: form.constitutionType.value,
-            doi: form.doi.value,
-            pan: form.pan.value,
-            gstin: form.gstin.value,
-            msmeNumber: form.msmeNumber.value,
-            authPerson: form.authPerson.value,
-            mobile: form.mobile.value,
-            email: form.email.value,
-            bankName: form.bankName.value,
-            accountNum: form.accountNum.value,
-            ifsc: form.ifsc.value,
-            turnoverLast: form.turnoverLast.value,
-            turnoverPrev: form.turnoverPrev.value,
-            profitLast: form.profitLast.value,
-            profitPrev: form.profitPrev.value,
-            litigation: form.ongoingLitigation.value, 
-            blacklisted: form.isBlacklisted.value,
-            category: form.category.value,
-            vendorType: selectedType, // Captured from your handleLevel1 function
-            files: uploadedFiles
+            CREATE TABLE vendors (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    company_name TEXT,
+    constitution_type TEXT,
+    doi DATE,
+    pan TEXT,
+    gstin TEXT,
+    msme_number TEXT,
+    auth_person TEXT,
+    mobile TEXT,
+    email TEXT,
+    bank_name TEXT,
+    account_num TEXT,
+    ifsc TEXT,
+    turnover_last NUMERIC,
+    turnover_prev NUMERIC,
+    profit_last NUMERIC,
+    profit_prev NUMERIC,
+    litigation TEXT,
+    blacklisted TEXT,
+    category TEXT,
+    vendor_type TEXT,
+    files JSONB, -- Stores the array of file objects
+    google_drive_url TEXT,
+    status TEXT DEFAULT 'pending'
+);
         };
 
         await fetch(WEB_APP_URL, {
