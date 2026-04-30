@@ -98,8 +98,13 @@
                     <td>${v.bank_name || ''}<br><small>A/c: ${v.account_number || ''}</small></td>
                     <td>Turnover: ${v.turnover_last || 0}<br>Profit: ${v.profit_last || 0}</td>
                     <td>Turnover: ${v.turnover_prev || 0}<br>Profit: ${v.profit_prev || 0}</td>
-                    <td><a href="${v.drive_link}" target="_blank" class="btn-drive">📁 Drive Folder</a></td>
-                    <td>
+<td>
+    ${v.drive_link ? 
+        `<a href="${v.drive_link.startsWith('http') ? v.drive_link : 'https://' + v.drive_link}" 
+            target="_blank" 
+            class="btn-drive">📁 Drive Folder</a>` 
+        : 'No Link'}
+</td>                    <td>
                         <select class="status-select status-${v.status || 'Pending'}" onchange="updateStatus('${v.id}', this.value)">
                             <option value="Pending" ${v.status === 'Pending' ? 'selected' : ''}>Pending</option>
                             <option value="Approved" ${v.status === 'Approved' ? 'selected' : ''}>Approved</option>
