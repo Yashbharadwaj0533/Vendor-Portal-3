@@ -98,19 +98,8 @@
                     <td>${v.bank_name || ''}<br><small>A/c: ${v.account_number || ''}</small></td>
                     <td>Turnover: ${v.turnover_last || 0}<br>Profit: ${v.profit_last || 0}</td>
                     <td>Turnover: ${v.turnover_prev || 0}<br>Profit: ${v.profit_prev || 0}</td>
-
-<td>
-    ${v.drive_link ? ... }
-</td>
-
-// To this:
-<td>
-    ${v.google_drive_url ? 
-        `<a href="${v.google_drive_url.startsWith('http') ? v.google_drive_url : 'https://' + v.google_drive_url}" 
-            target="_blank" 
-            class="btn-drive">📁 Drive Folder</a>` 
-        : '<span style="color:#94a3b8; font-style:italic;">No Link</span>'}
-</td>                      <select class="status-select status-${v.status || 'Pending'}" onchange="updateStatus('${v.id}', this.value)">
+                    <td><a href="${v.google_drive_url}" target="_blank" class="btn-drive">📁 Drive Folder</a></td>
+                     <select class="status-select status-${v.status || 'Pending'}" onchange="updateStatus('${v.id}', this.value)">
                             <option value="Pending" ${v.status === 'Pending' ? 'selected' : ''}>Pending</option>
                             <option value="Approved" ${v.status === 'Approved' ? 'selected' : ''}>Approved</option>
                             <option value="Rejected" ${v.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
