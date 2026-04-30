@@ -39,6 +39,7 @@
                     <th>Company Name</th>
                     <th>PAN / GSTIN</th>
                     <th>Category</th>
+                    <th>Vendor Type</th>
                     <th>Auth Person</th>
                     <th>Contact Info</th>
                     <th>Bank Details</th>
@@ -93,6 +94,7 @@
                     <td><strong>${v.company_name || 'N/A'}</strong><br><small>${v.constitution_type || ''}</small></td>
                     <td>PAN: ${v.pan || 'N/A'}<br>GST: ${v.gstin || 'N/A'}</td>
                     <td>${v.category || 'N/A'}</td>
+                    <td>${v.vendor_type || 'N/A'}</td>
                     <td>${v.auth_person || 'N/A'}</td>
                     <td>${v.email || ''}<br>${v.mobile || ''}</td>
                     <td>${v.bank_name || ''}<br><small>A/c: ${v.account_number || ''}</small></td>
@@ -134,7 +136,7 @@
         "PAN Number", "GSTIN", "MSME Number", "Authorised Person", "Mobile", "Email", 
         "Bank Name", "Account Number", "IFSC Code", "Turnover (Last FY)", "Turnover (Prev FY)", 
         "Profit (Last FY)", "Profit (Prev FY)", "Litigation Details", "Blacklisted Status", 
-        "Category", "Folder Link", "Status"
+        "Category", "vendor_type", "Folder Link", "Status"
     ];
 
     const csvRows = [headers.join(",")];
@@ -149,6 +151,7 @@
             `"${v.pan_number || ''}"`,
             `"${v.gstin || ''}"`,
             `"${v.msme_number || ''}"`,
+            `"${v.vendor_type || ''}"`,
             `"${v.auth_person || ''}"`,
             `"${v.mobile || ''}"`,
             `"${v.email || ''}"`,
