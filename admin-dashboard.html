@@ -91,7 +91,7 @@
                 row.innerHTML = `
                     <td>${new Date(v.created_at).toLocaleDateString()}</td>
                     <td><strong>${v.company_name || 'N/A'}</strong><br><small>${v.constitution_type || ''}</small></td>
-                    <td>PAN: ${v.pan_number || 'N/A'}<br>GST: ${v.gstin || 'N/A'}</td>
+                    <td>PAN: ${v.pan || 'N/A'}<br>GST: ${v.gstin || 'N/A'}</td>
                     <td>${v.category || 'N/A'}</td>
                     <td>${v.auth_person || 'N/A'}</td>
                     <td>${v.email || ''}<br>${v.mobile || ''}</td>
