@@ -78,83 +78,81 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script>
-    // Initialize Supabase
-    const SUB_URL = "https://dfphwmxczthwitzizczy.supabase.co";
-    const SUB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmcGh3bXhjenRod2l0eml6Y3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMDY1NTUsImV4cCI6MjA5MDY4MjU1NX0.cvU0kh_Y83ANGuBUrvCXVzycF-8YrM52tcSSJwFBYlo";
-    const sbClient = supabase.createClient(SUB_URL, SUB_KEY);
+    <script>
+        // 2. Initialize Supabase
+        const SUB_URL = "https://dfphwmxczthwitzizczy.supabase.co";
+        const SUB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmcGh3bXhjenRod2l0eml6Y3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMDY1NTUsImV4cCI6MjA5MDY4MjU1NX0.cvU0kh_Y83ANGuBUrvCXVzycF-8YrM52tcSSJwFBYlo";
+        const sbClient = supabase.createClient(SUB_URL, SUB_KEY);
 
-    async function checkStatus() {
-        const regNumber = document.getElementById('regNumber').value.trim();
-        const errorMsg = document.getElementById('errorMsg');
-        const resultArea = document.getElementById('resultArea');
-        const displayCompany = document.getElementById('displayCompany');
-        const displayStatus = document.getElementById('displayStatus');
-        const statusDesc = document.getElementById('statusDesc');
-    
+        async function checkStatus() {
+            const regNumber = document.getElementById('regNumber').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            const resultArea = document.getElementById('resultArea');
+            const displayCompany = document.getElementById('displayCompany');
+            const displayStatus = document.getElementById('displayStatus');
+            const statusDesc = document.getElementById('statusDesc');
 
-        if (!regNumber) {
-            alert("Please enter your PAN No");
-            return;
-        }
-
-        // Reset UI
-        errorMsg.style.display = 'none';
-        resultArea.style.display = 'none';
-
-      try {
-            // 1. Fetch ALL records matching the PAN or GSTIN
-            const { data, error } = await sbClient
-                .from('vendors')
-                .select('company_name, status, vendor_type, created_at') // Added vendor_type
-                .or(`pan.eq.${regNumber},gstin.eq.${regNumber}`)
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-
-            // 2. Check if any data exists
-            if (!data || data.length === 0) {
-                errorMsg.style.display = 'block';
+            if (!regNumber) {
+                alert("Please enter your Registration Number (PAN/GST)");
                 return;
             }
 
-            // 3. Update the UI
-            displayCompany.innerText = data[0].company_name;
-            resultArea.style.display = 'block';
-            
-            // 4. Clear and rebuild the status area to show multiple if they exist
-            // We replace the single 'displayStatus' with a list
-            displayStatus.innerHTML = ''; 
-            
-            data.forEach(record => {
-                const type = record.vendor_type || 'General';
-                const status = record.status || 'Pending';
-                const statusClass = 'status-' + status.toLowerCase();
-                
-                const statusHtml = `
-                    <div style="margin-bottom: 1.5rem; padding: 1rem; border: 1px solid var(--border); border-radius: 8px;">
-                        <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; font-weight: bold;">
-                            Type: ${type}
-                        </div>
-                        <div class="status-value ${statusClass}" style="font-size: 1.2rem;">
-                            ${status}
-                        </div>
-                        <div style="font-size: 0.8rem; color: #94a3b8;">
-                            Applied on: ${new Date(record.created_at).toLocaleDateString()}
-                        </div>
-                    </div>
-                `;
-                displayStatus.insertAdjacentHTML('beforeend', statusHtml);
-            });
+            // Reset UI
+            errorMsg.style.display = 'none';
+            resultArea.style.display = 'none';
+            displayStatus.innerHTML = ''; // Clear previous results
 
-            // Hide the old static description since we are showing specific ones now
-            statusDesc.innerText = "Below are the statuses for all registration types associated with this ID.";
+            try {
+                // 3. Search for ALL matching records
+                const { data, error } = await sbClient
+                    .from('vendors')
+                    .select('company_name, status, vendor_type, created_at')
+                    .or(`pan.eq.${regNumber},gstin.eq.${regNumber}`)
+                    .order('created_at', { ascending: false });
 
-        } catch (err) {
-            console.error("Search Error:", err);
-            alert("An error occurred while fetching status.");
-        }
-</script>
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    errorMsg.style.display = 'block';
+                    return;
+                }
+
+                // 4. Show Results
+                displayCompany.innerText = data[0].company_name;
+                resultArea.style.display = 'block';
+
+                // 5. Loop through records and show different statuses for different types
+                data.forEach(record => {
+                    const type = record.vendor_type || 'General';
+                    const status = record.status || 'Pending';
+                    const statusClass = 'status-' + status.toLowerCase();
+                    
+                    const statusHtml = `
+                        <div style="margin-bottom: 1.5rem; padding: 1.2rem; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc;">
+                            <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 4px;">
+                                Registration Type: ${type}
+                            </div>
+                            <div class="status-value ${statusClass}" style="font-size: 1.3rem; margin-bottom: 8px;">
+                                ${status}
+                            </div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">
+                                Application Date: ${new Date(record.created_at).toLocaleDateString()}
+                            </div>
+                        </div>
+                    `;
+                    displayStatus.insertAdjacentHTML('beforeend', statusHtml);
+                });
+
+                statusDesc.innerText = "If you have multiple registrations, they are listed above.";
+
+            } catch (err) {
+                console.error("Search Error:", err);
+                alert("An error occurred while fetching status. Check console for details.");
+            }
+        } // End of checkStatus function
+    </script>
 </body>
+
 </html>
