@@ -61,7 +61,7 @@
             </div>
 
             <div class="search-box">
-                <input type="text" id="regNumber" placeholder="Enter Registration Number (PAN)">
+                <input type="text" id="regNumber" placeholder="Enter Registration Number (PAN/GST)">
                 <button class="btn-search" onclick="checkStatus()">Search Status</button>
             </div>
 
@@ -92,6 +92,7 @@
         const displayCompany = document.getElementById('displayCompany');
         const displayStatus = document.getElementById('displayStatus');
         const statusDesc = document.getElementById('statusDesc');
+    
 
         if (!regNumber) {
             alert("Please enter your PAN No");
@@ -102,45 +103,58 @@
         errorMsg.style.display = 'none';
         resultArea.style.display = 'none';
 
-        try {
-            // Search in Supabase (Checking both PAN and GSTIN columns)
+      try {
+            // 1. Fetch ALL records matching the PAN or GSTIN
             const { data, error } = await sbClient
                 .from('vendors')
-                .select('company_name, status, created_at')
+                .select('company_name, status, vendor_type, created_at') // Added vendor_type
                 .or(`pan.eq.${regNumber},gstin.eq.${regNumber}`)
-                .maybeSingle();
+                .order('created_at', { ascending: false });
 
             if (error) throw error;
 
-            if (!data) {
+            // 2. Check if any data exists
+            if (!data || data.length === 0) {
                 errorMsg.style.display = 'block';
                 return;
             }
 
-            // Show Results
-            displayCompany.innerText = data.company_name;
-            displayStatus.innerText = data.status || 'Pending';
-            
-            // Apply color classes
-            displayStatus.className = 'status-value'; // reset
-            displayStatus.classList.add('status-' + (data.status || 'pending').toLowerCase());
-
-            // Set Description
-            if (data.status === 'Approved') {
-                statusDesc.innerText = "Your registration is complete. Our team will contact you shortly.";
-            } else if (data.status === 'Rejected') {
-                statusDesc.innerText = "Your application was not approved at this time. Please contact support for details.";
-            } else {
-                statusDesc.innerText = "Your application is currently under review by our compliance team.";
-            }
-
+            // 3. Update the UI
+            displayCompany.innerText = data[0].company_name;
             resultArea.style.display = 'block';
+            
+            // 4. Clear and rebuild the status area to show multiple if they exist
+            // We replace the single 'displayStatus' with a list
+            displayStatus.innerHTML = ''; 
+            
+            data.forEach(record => {
+                const type = record.vendor_type || 'General';
+                const status = record.status || 'Pending';
+                const statusClass = 'status-' + status.toLowerCase();
+                
+                const statusHtml = `
+                    <div style="margin-bottom: 1.5rem; padding: 1rem; border: 1px solid var(--border); border-radius: 8px;">
+                        <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; font-weight: bold;">
+                            Type: ${type}
+                        </div>
+                        <div class="status-value ${statusClass}" style="font-size: 1.2rem;">
+                            ${status}
+                        </div>
+                        <div style="font-size: 0.8rem; color: #94a3b8;">
+                            Applied on: ${new Date(record.created_at).toLocaleDateString()}
+                        </div>
+                    </div>
+                `;
+                displayStatus.insertAdjacentHTML('beforeend', statusHtml);
+            });
+
+            // Hide the old static description since we are showing specific ones now
+            statusDesc.innerText = "Below are the statuses for all registration types associated with this ID.";
 
         } catch (err) {
             console.error("Search Error:", err);
             alert("An error occurred while fetching status.");
         }
-    }
 </script>
 </body>
 </html>
