@@ -123,6 +123,40 @@
                 displayCompany.innerText = data[0].company_name;
                 resultArea.style.display = 'block';
 
+                
+
+// 4. Update the main header (optional, keeping it for the title)
+displayCompany.innerText = data[0].company_name;
+resultArea.style.display = 'block';
+
+// 5. Loop through records and show Company Name inside each box
+data.forEach(record => {
+    const type = record.vendor_type || 'General';
+    const status = record.status || 'Pending';
+    const company = record.company_name || 'N/A'; // Get company name for this specific row
+    const statusClass = 'status-' + status.toLowerCase();
+    
+    const statusHtml = `
+        <div style="margin-bottom: 1.5rem; padding: 1.2rem; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc;">
+            <div style="font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 8px;">
+                ${company}
+            </div>
+            <hr style="border: 0; border-top: 1px solid var(--border); margin-bottom: 12px;">
+            
+            <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 4px;">
+                Registration Type: ${type}
+            </div>
+            <div class="status-value ${statusClass}" style="font-size: 1.3rem; margin-bottom: 8px;">
+                ${status}
+            </div>
+            <div style="font-size: 0.8rem; color: #94a3b8;">
+                Application Date: ${new Date(record.created_at).toLocaleDateString()}
+            </div>
+        </div>
+    `;
+    displayStatus.insertAdjacentHTML('beforeend', statusHtml);
+});
+
                 // 5. Loop through records and show different statuses for different types
                 data.forEach(record => {
                     const type = record.vendor_type || 'General';
