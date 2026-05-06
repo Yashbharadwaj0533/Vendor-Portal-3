@@ -86,100 +86,77 @@
         const SUB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmcGh3bXhjenRod2l0eml6Y3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMDY1NTUsImV4cCI6MjA5MDY4MjU1NX0.cvU0kh_Y83ANGuBUrvCXVzycF-8YrM52tcSSJwFBYlo";
         const sbClient = supabase.createClient(SUB_URL, SUB_KEY);
 
-        async function checkStatus() {
-            const regNumber = document.getElementById('regNumber').value.trim();
-            const errorMsg = document.getElementById('errorMsg');
-            const resultArea = document.getElementById('resultArea');
-            const displayCompany = document.getElementById('displayCompany');
-            const displayStatus = document.getElementById('displayStatus');
-            const statusDesc = document.getElementById('statusDesc');
+       async function checkStatus() {
+    const regNumber = document.getElementById('regNumber').value.trim();
+    const errorMsg = document.getElementById('errorMsg');
+    const resultArea = document.getElementById('resultArea');
+    const displayCompany = document.getElementById('displayCompany');
+    const displayStatus = document.getElementById('displayStatus');
 
-            if (!regNumber) {
-                alert("Please enter your Registration Number (PAN/GST)");
-                return;
-            }
+    if (!regNumber) {
+        alert("Please enter your PAN/GST");
+        return;
+    }
 
-            // Reset UI
-            errorMsg.style.display = 'none';
-            resultArea.style.display = 'none';
-            displayStatus.innerHTML = ''; // Clear previous results
+    // 1. CLEAR UI completely before starting a new search
+    errorMsg.style.display = 'none';
+    resultArea.style.display = 'none';
+    displayStatus.innerHTML = ''; 
 
-            try {
-                // 3. Search for ALL matching records
-                const { data, error } = await sbClient
-                    .from('vendors')
-                    .select('company_name, status, vendor_type, created_at')
-                    .or(`pan.eq.${regNumber},gstin.eq.${regNumber}`)
-                    .order('created_at', { ascending: false });
+    try {
+        const { data, error } = await sbClient
+            .from('vendors')
+            .select('company_name, status, vendor_type, created_at')
+            .or(`pan.eq.${regNumber},gstin.eq.${regNumber}`)
+            .order('created_at', { ascending: false });
 
-                if (error) throw error;
+        if (error) throw error;
 
-                if (!data || data.length === 0) {
-                    errorMsg.style.display = 'block';
-                    return;
-                }
+        if (!data || data.length === 0) {
+            errorMsg.style.display = 'block';
+            return;
+        }
 
-                // 4. Show Results
-                displayCompany.innerText = data[0].company_name;
-                resultArea.style.display = 'block';
+        // 2. REMOVE DUPLICATES in the browser memory
+        // This ensures that if the same data exists twice, it only shows once.
+        const seen = new Set();
+        const uniqueData = data.filter(item => {
+            // Create a unique key based on Type + Status + Date
+            const key = `${item.vendor_type}-${item.status}-${new Date(item.created_at).toLocaleDateString()}`;
+            const isDuplicate = seen.has(key);
+            seen.add(key);
+            return !isDuplicate;
+        });
 
-                
+        // 3. Show Results
+        displayCompany.innerText = uniqueData[0].company_name;
+        resultArea.style.display = 'block';
 
-// 4. Update the main header (optional, keeping it for the title)
-displayCompany.innerText = data[0].company_name;
-resultArea.style.display = 'block';
-
-// 5. Loop through records and show Company Name inside each box
-data.forEach(record => {
-    const type = record.vendor_type || 'General';
-    const status = record.status || 'Pending';
-    const company = record.company_name || 'N/A'; // Get company name for this specific row
-    const statusClass = 'status-' + status.toLowerCase();
-    
-    const statusHtml = `
-        <div style="margin-bottom: 1.5rem; padding: 1.2rem; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc;">
-            <div style="font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 8px;">
-                ${company}
-            </div>
-            <hr style="border: 0; border-top: 1px solid var(--border); margin-bottom: 12px;">
+        uniqueData.forEach(record => {
+            const type = record.vendor_type || 'General';
+            const status = record.status || 'Pending';
+            const company = record.company_name || 'N/A';
+            const statusClass = 'status-' + status.toLowerCase();
             
-            <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 4px;">
-                Registration Type: ${type}
-            </div>
-            <div class="status-value ${statusClass}" style="font-size: 1.3rem; margin-bottom: 8px;">
-                ${status}
-            </div>
-            <div style="font-size: 0.8rem; color: #94a3b8;">
-                Application Date: ${new Date(record.created_at).toLocaleDateString()}
-            </div>
-        </div>
-    `;
-    displayStatus.insertAdjacentHTML('beforeend', statusHtml);
-});
-
-                // 5. Loop through records and show different statuses for different types
-                data.forEach(record => {
-                    const type = record.vendor_type || 'General';
-                    const status = record.status || 'Pending';
-                    const statusClass = 'status-' + status.toLowerCase();
-                    
-                    const statusHtml = `
-                        <div style="margin-bottom: 1.5rem; padding: 1.2rem; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc;">
-                            <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 4px;">
-                                Registration Type: ${type}
-                            </div>
-                            <div class="status-value ${statusClass}" style="font-size: 1.3rem; margin-bottom: 8px;">
-                                ${status}
-                            </div>
-                            <div style="font-size: 0.8rem; color: #94a3b8;">
-                                Application Date: ${new Date(record.created_at).toLocaleDateString()}
-                            </div>
-                        </div>
-                    `;
-                    displayStatus.insertAdjacentHTML('beforeend', statusHtml);
-                });
-
-                statusDesc.innerText = "If you have multiple registrations, they are listed above.";
+            const statusHtml = `
+                <div style="margin-bottom: 1.5rem; padding: 1.2rem; border: 1px solid var(--border); border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="font-size: 1.1rem; font-weight: 700; text-align: center; color: #1e293b; margin-bottom: 10px;">
+                        ${company}
+                    </div>
+                    <hr style="border:0; border-top: 1px solid #eee; margin-bottom: 12px;">
+                    <div style="font-size: 0.75rem; color: #64748b; text-align:center; text-transform: uppercase; font-weight: 800; margin-bottom: 4px;">
+                        Registration Type: ${type}
+                    </div>
+                    <div class="status-value ${statusClass}" style="font-size: 1.4rem; text-align:center; margin-bottom: 8px;">
+                        ${status}
+                    </div>
+                    <div style="font-size: 0.8rem; color: #94a3b8; text-align:center;">
+                        Application Date: ${new Date(record.created_at).toLocaleDateString()}
+                    </div>
+                </div>
+            `;
+            displayStatus.insertAdjacentHTML('beforeend', statusHtml);
+        });
 
             } catch (err) {
                 console.error("Search Error:", err);
