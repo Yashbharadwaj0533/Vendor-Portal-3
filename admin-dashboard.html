@@ -1,198 +1,405 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | Innoworq</title>
-    <style>
-        :root { --primary: #1e293b; --bg: #f8fafc; --border: #e2e8f0; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: black; background-color: #D3D3D3}
-        .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        max-width: 1800px;
-        margin: 0 auto 20px;
-        color: blue;
-         }
-        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); max-width: 1800px; margin: 0 auto; overflow-x: auto; border: 1px solid var(--border); }
-        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 1600px; }
-        th { background: #f1f5f9; padding: 12px; font-size: 0.7rem; text-transform: uppercase; color: #64748b; border-bottom: 2px solid var(--border); }
-        td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 0.85rem; vertical-align: top; }
-        .btn-excel { background: #166534; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        .btn-logout { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-        .btn-drive { color: #2563eb; text-decoration: none; font-weight: 600; background: #eff6ff; padding: 5px 10px; border-radius: 4px; border: 1px solid #dbeafe; display: inline-block; }
-        .status-select { padding: 6px; border-radius: 4px; border: 1px solid var(--border); font-weight: bold; cursor: pointer; }
-        .status-Pending { background: #fef9c3; color: #854d0e; }
-        .status-Approved { background: #dcfce7; color: #166534; }
-        .status-Rejected { background: #fee2e2; color: #991b1b; }
-    </style>
-</head>
-<body>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Innoworq</title>
 
-    <div class="header">
-        <h1>Admin Control Panel</h1>
-        <div class="actions">
-            <button onclick="downloadExcel()" class="btn-excel">📊 Export to Excel</button>
-            <button onclick="handleLogout()" class="btn-logout">Logout</button>
-        </div>
-    </div>
-
-    <div class="card">
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Company Name</th>
-                    <th>PAN / GSTIN</th>
-                    <th>Category</th>
-                    <th>Vendor Type</th>
-                    <th>Auth Person</th>
-                    <th>Contact Info</th>
-                    <th>Bank Details</th>
-                    <th>Financials (Last FY)</th>
-                    <th>Financials (Prev FY)</th>
-                    <th>Documents</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <tr><td colspan="11" style="text-align:center; padding:50px;">Fetching vendor data...</td></tr>
-            </tbody>
-        </table>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        const SUB_URL = "https://dfphwmxczthwitzizczy.supabase.co";
-        // Use your actual Anon/Public Key here
-        const SUB_KEY ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmcGh3bXhjenRod2l0eml6Y3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMDY1NTUsImV4cCI6MjA5MDY4MjU1NX0.cvU0kh_Y83ANGuBUrvCXVzycF-8YrM52tcSSJwFBYlo";
-        const sbClient = supabase.createClient(SUB_URL, SUB_KEY);
-        let vendorData = [];
-
-        async function checkAuth() {
-            const { data: { user } } = await sbClient.auth.getUser();
-            if (!user) {
-                window.location.href = "admin-login.html";
-            } else {
-                loadVendors();
-            }
-        }
-
-        async function loadVendors() {
-            const { data, error } = await sbClient
-                .from('vendors')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                document.getElementById('tableBody').innerHTML = `<tr><td colspan="11" style="color:red; text-align:center;">Error: ${error.message}</td></tr>`;
-                return;
-            }
-            
-            vendorData = data;
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = data.length ? "" : '<tr><td colspan="11" style="text-align:center;">No registrations found.</td></tr>';
-
-            data.forEach(v => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${new Date(v.created_at).toLocaleDateString()}</td>
-                    <td><strong>${v.company_name || 'N/A'}</strong><br><small>${v.constitution_type || ''}</small></td>
-                    <td>PAN: ${v.pan || 'N/A'}<br>GST: ${v.gstin || 'N/A'}</td>
-                    <td>${v.category || 'N/A'}</td>
-                    <td>${v.vendor_type || 'N/A'}</td>
-                    <td>${v.auth_person || 'N/A'}</td>
-                    <td>${v.email || ''}<br>${v.mobile || ''}</td>
-                    <td>${v.bank_name || ''}<br><small>A/c: ${v.account_num || ''}</small></td>
-                    <td>Turnover: ${v.turnover_last || 0}<br>Profit: ${v.profit_last || 0}</td>
-                    <td>Turnover: ${v.turnover_prev || 0}<br>Profit: ${v.profit_prev || 0}</td>
-                    <td><a href="${v.google_drive_url}" target="_blank" class="btn-drive">📁 Drive Folder</a></td>
-                     <select class="status-select status-${v.status || 'Pending'}" onchange="updateStatus('${v.id}', this.value)">
-                            <option value="Pending" ${v.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                            <option value="Approved" ${v.status === 'Approved' ? 'selected' : ''}>Approved</option>
-                            <option value="Rejected" ${v.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
-                        </select>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        async function updateStatus(id, newStatus) {
-            const { error } = await sbClient.from('vendors').update({ status: newStatus }).eq('id', id);
-            if (error) alert("Update failed: " + error.message);
-            else loadVendors();
-        }
-
-        async function handleLogout() {
-            const { error } = await sbClient.auth.signOut();
-            if (!error) window.location.href = "admin-login.html";
-            else alert("Logout failed");
-        }
-
-        function downloadExcel() {
-    if (vendorData.length === 0) {
-        alert("No data available to export.");
-        return;
+  <style>
+    :root {
+      --primary: #1e293b;
+      --bg: #f8fafc;
+      --border: #e2e8f0;
     }
 
-    // 1. Define ALL headers exactly as they appear in your form
-    const headers = [
-        "Submission Date", "Company Name", "Constitution", "Date of Incorporation", 
-        "PAN Number", "GSTIN", "MSME Number", "Authorised Person", "Mobile", "Email", 
-        "Bank Name", "Account Number", "IFSC Code", "Turnover (Last FY)", "Turnover (Prev FY)", 
-        "Profit (Last FY)", "Profit (Prev FY)", "Litigation Details", "Blacklisted Status", 
-        "Category", "vendor_type", "Folder Link", "Status"
-    ];
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #d3d3d3;
+      margin: 0;
+      padding: 20px;
+      color: black;
+    }
 
-    const csvRows = [headers.join(",")];
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1800px;
+      margin: 0 auto 20px;
+      color: blue;
+    }
 
-    // 2. Map every database column to the CSV rows
-    vendorData.forEach(v => {
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      max-width: 1800px;
+      margin: 0 auto;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      min-width: 1600px;
+    }
+
+    th {
+      background: #f1f5f9;
+      padding: 12px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: #64748b;
+      border-bottom: 2px solid var(--border);
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+      vertical-align: top;
+    }
+
+    .btn-excel {
+      background: #166534;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-logout {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-drive {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: 600;
+      background: #eff6ff;
+      padding: 5px 10px;
+      border-radius: 4px;
+      border: 1px solid #dbeafe;
+      display: inline-block;
+    }
+
+    .status-select {
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .status-select:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .status-Pending {
+      background: #fef9c3;
+      color: #854d0e;
+    }
+
+    .status-Approved {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-Rejected {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1>Admin Control Panel</h1>
+
+    <div class="actions">
+      <button onclick="downloadExcel()" class="btn-excel">Export to Excel</button>
+      <button onclick="handleLogout()" class="btn-logout">Logout</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Company Name</th>
+          <th>PAN / GSTIN</th>
+          <th>Category</th>
+          <th>Vendor Type</th>
+          <th>Auth Person</th>
+          <th>Contact Info</th>
+          <th>Bank Details</th>
+          <th>Financials (Last FY)</th>
+          <th>Financials (Prev FY)</th>
+          <th>Documents</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+
+      <tbody id="tableBody">
+        <tr>
+          <td colspan="12" style="text-align:center; padding:50px;">
+            Fetching vendor data...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    const SUB_URL = "https://dfphwmxczthwitzizczy.supabase.co";
+
+    const SUB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmcGh3bXhjenRod2l0eml6Y3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMDY1NTUsImV4cCI6MjA5MDY4MjU1NX0.cvU0kh_Y83ANGuBUrvCXVzycF-8YrM52tcSSJwFBYlo";
+
+    const sbClient = supabase.createClient(SUB_URL, SUB_KEY);
+
+    let vendorData = [];
+
+    async function checkAuth() {
+      const { data: { user } } = await sbClient.auth.getUser();
+
+      if (!user) {
+        window.location.href = "admin-login.html";
+      } else {
+        loadVendors();
+      }
+    }
+
+    async function loadVendors() {
+      const { data, error } = await sbClient
+        .from("vendors")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      const tbody = document.getElementById("tableBody");
+
+      if (error) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="12" style="color:red; text-align:center;">
+              Error: ${error.message}
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      vendorData = data || [];
+
+      if (vendorData.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="12" style="text-align:center;">
+              No registrations found.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = "";
+
+      vendorData.forEach(v => {
+        const currentStatus = v.status || "Pending";
+
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${new Date(v.created_at).toLocaleDateString()}</td>
+
+          <td>
+            <strong>${v.company_name || "N/A"}</strong><br>
+            <small>${v.constitution_type || ""}</small>
+          </td>
+
+          <td>
+            PAN: ${v.pan || v.pan_number || "N/A"}<br>
+            GST: ${v.gstin || "N/A"}
+          </td>
+
+          <td>${v.category || "N/A"}</td>
+
+          <td>${v.vendor_type || "N/A"}</td>
+
+          <td>${v.auth_person || "N/A"}</td>
+
+          <td>
+            ${v.email || ""}<br>
+            ${v.mobile || ""}
+          </td>
+
+          <td>
+            ${v.bank_name || ""}<br>
+            <small>A/c: ${v.account_num || v.account_number || ""}</small>
+          </td>
+
+          <td>
+            Turnover: ${v.turnover_last || 0}<br>
+            Profit: ${v.profit_last || 0}
+          </td>
+
+          <td>
+            Turnover: ${v.turnover_prev || 0}<br>
+            Profit: ${v.profit_prev || 0}
+          </td>
+
+          <td>
+            <a href="${v.google_drive_url || v.drive_link || "#"}" target="_blank" class="btn-drive">
+              Drive Folder
+            </a>
+          </td>
+
+          <td>
+            <select 
+              class="status-select status-${currentStatus}" 
+              onchange="updateStatus('${v.id}', this.value, this)"
+            >
+              <option value="Pending" ${currentStatus === "Pending" ? "selected" : ""}>Pending</option>
+              <option value="Approved" ${currentStatus === "Approved" ? "selected" : ""}>Approved</option>
+              <option value="Rejected" ${currentStatus === "Rejected" ? "selected" : ""}>Rejected</option>
+            </select>
+          </td>
+        `;
+
+        tbody.appendChild(row);
+      });
+    }
+
+    async function updateStatus(id, newStatus, selectElement) {
+      const oldStatus = selectElement.className
+        .replace("status-select", "")
+        .replace("status-", "")
+        .trim();
+
+      selectElement.disabled = true;
+
+      const { error } = await sbClient
+        .from("vendors")
+        .update({ status: newStatus })
+        .eq("id", id);
+
+      selectElement.disabled = false;
+
+      if (error) {
+        alert("Update failed: " + error.message);
+        selectElement.value = oldStatus || "Pending";
+        return;
+      }
+
+      selectElement.className = `status-select status-${newStatus}`;
+
+      const vendor = vendorData.find(v => String(v.id) === String(id));
+      if (vendor) vendor.status = newStatus;
+
+      alert("Status updated successfully.");
+    }
+
+    async function handleLogout() {
+      const { error } = await sbClient.auth.signOut();
+
+      if (!error) {
+        window.location.href = "admin-login.html";
+      } else {
+        alert("Logout failed");
+      }
+    }
+
+    function downloadExcel() {
+      if (vendorData.length === 0) {
+        alert("No data available to export.");
+        return;
+      }
+
+      const headers = [
+        "Submission Date",
+        "Company Name",
+        "Constitution",
+        "Date of Incorporation",
+        "PAN Number",
+        "GSTIN",
+        "MSME Number",
+        "Authorised Person",
+        "Mobile",
+        "Email",
+        "Bank Name",
+        "Account Number",
+        "IFSC Code",
+        "Turnover (Last FY)",
+        "Turnover (Prev FY)",
+        "Profit (Last FY)",
+        "Profit (Prev FY)",
+        "Litigation Details",
+        "Blacklisted Status",
+        "Category",
+        "Vendor Type",
+        "Folder Link",
+        "Status"
+      ];
+
+      const csvRows = [headers.join(",")];
+
+      vendorData.forEach(v => {
         const values = [
-            new Date(v.created_at).toLocaleDateString(),
-            `"${v.company_name || ''}"`,
-            `"${v.constitution_type || ''}"`,
-            `"${v.doi || ''}"`,
-            `"${v.pan_number || ''}"`,
-            `"${v.gstin || ''}"`,
-            `"${v.msme_number || ''}"`,
-            `"${v.vendor_type || ''}"`,
-            `"${v.auth_person || ''}"`,
-            `"${v.mobile || ''}"`,
-            `"${v.email || ''}"`,
-            `"${v.bank_name || ''}"`,
-            `"${v.account_number || ''}"`,
-            `"${v.ifsc_code || ''}"`,
-            `"${v.turnover_last || 0}"`,
-            `"${v.turnover_prev || 0}"`,
-            `"${v.profit_last || 0}"`,
-            `"${v.profit_prev || 0}"`,
-            `"${v.litigation || 'None'}"`,
-            `"${v.blacklisted || 'No'}"`,
-            `"${v.category || ''}"`,
-            `"${v.drive_link || ''}"`,
-            `"${v.status || 'Pending'}"`
+          new Date(v.created_at).toLocaleDateString(),
+          `"${v.company_name || ""}"`,
+          `"${v.constitution_type || ""}"`,
+          `"${v.doi || ""}"`,
+          `"${v.pan || v.pan_number || ""}"`,
+          `"${v.gstin || ""}"`,
+          `"${v.msme_number || ""}"`,
+          `"${v.auth_person || ""}"`,
+          `"${v.mobile || ""}"`,
+          `"${v.email || ""}"`,
+          `"${v.bank_name || ""}"`,
+          `"${v.account_num || v.account_number || ""}"`,
+          `"${v.ifsc_code || ""}"`,
+          `"${v.turnover_last || 0}"`,
+          `"${v.turnover_prev || 0}"`,
+          `"${v.profit_last || 0}"`,
+          `"${v.profit_prev || 0}"`,
+          `"${v.litigation || "None"}"`,
+          `"${v.blacklisted || "No"}"`,
+          `"${v.category || ""}"`,
+          `"${v.vendor_type || ""}"`,
+          `"${v.google_drive_url || v.drive_link || ""}"`,
+          `"${v.status || "Pending"}"`
         ];
+
         csvRows.push(values.join(","));
-    });
+      });
 
-    // 3. Create and trigger the download
-    const csvString = csvRows.join("\n");
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Innoworq_Full_Vendor_Report_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
+      const csvString = csvRows.join("\n");
+      const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
 
-        checkAuth();
-    </script>
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Innoworq_Full_Vendor_Report_${new Date().toISOString().split("T")[0]}.csv`);
+      link.style.visibility = "hidden";
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    checkAuth();
+  </script>
 </body>
 </html>
